@@ -302,10 +302,32 @@ export class SoundController {
     }
 
     /**
-     * 天気コードからシーンを決定（季節考慮）
+     * 天気・時間帯・季節からシーンを決定
+     * 
+     * 判定優先順位:
+     * 1. 天気（雨/雷雨は最優先）
+     * 2. 時間帯 × 季節の組み合わせ
+     * 
+     * シーンマトリクス:
+     * | 季節     | 朝〜昼（晴れ/曇り） | 夜（晴れ/曇り） |
+     * |----------|---------------------|-----------------|
+     * | 春(3-5)  | 風（葉擦れ）        | 風              |
+     * | 夏(6-8)  | 風（葉擦れ）        | 夜（虫の声）    |
+     * | 秋(9-11) | 風（葉擦れ）        | 夜（虫、9月のみ）/風 |
+     * | 冬(12-2) | 風                  | 風              |
      */
-    static getSceneFromWeather(weatherCode: number, isDay: boolean, month?: number): SoundScene {
-        // 雨系
+    static getSceneFromWeather(
+        weatherCode: number,
+        isDay: boolean,
+        month?: number,
+        hour?: number
+    ): SoundScene {
+        const currentMonth = month ?? new Date().getMonth() + 1;
+        const currentHour = hour ?? new Date().getHours();
+
+        // === 天気優先判定 ===
+
+        // 雨系（霧雨〜強い雨、にわか雨）
         if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(weatherCode)) {
             return 'rain';
         }
@@ -313,23 +335,80 @@ export class SoundController {
         if ([95, 96, 99].includes(weatherCode)) {
             return 'rain';
         }
-        // 夜
-        if (!isDay) {
-            // 季節による夜の音の使い分け
-            const currentMonth = month ?? new Date().getMonth() + 1;
-            // 夏（6-9月）は虫の声
-            if (currentMonth >= 6 && currentMonth <= 9) {
-                return 'night';
-            }
-            // それ以外の季節は風（冬に虫の声は不自然）
+        // 雪（冬らしい静かな風）
+        if ([71, 73, 75, 77, 85, 86].includes(weatherCode)) {
             return 'wind';
         }
-        // 風が強い（曇り〜晴れ）
+
+        // === 時間帯 × 季節 判定 ===
+
+        // 夜（日没後〜日の出前）
+        if (!isDay || currentHour < 5 || currentHour >= 20) {
+            // 夏の夜（6-8月）: 虫の声
+            if (currentMonth >= 6 && currentMonth <= 8) {
+                return 'night';
+            }
+            // 初秋の夜（9月）: まだ虫の声
+            if (currentMonth === 9) {
+                return 'night';
+            }
+            // それ以外の夜: 風（冬や春は虫が鳴かない）
+            return 'wind';
+        }
+
+        // === 昼間 ===
+
+        // 曇り〜霧（やや静かな風）
         if ([2, 3, 45, 48].includes(weatherCode)) {
             return 'wind';
         }
-        // デフォルト（静か or 風）
+
+        // 晴れ（デフォルト: 風）
         return 'wind';
+    }
+
+    /**
+     * シーン決定の詳細情報を取得（デバッグ用）
+     */
+    static getSceneInfo(weatherCode: number, isDay: boolean, month?: number, hour?: number): {
+        scene: SoundScene;
+        reason: string;
+        season: string;
+        timeOfDay: string;
+    } {
+        const currentMonth = month ?? new Date().getMonth() + 1;
+        const currentHour = hour ?? new Date().getHours();
+
+        // 季節判定
+        let season: string;
+        if (currentMonth >= 3 && currentMonth <= 5) season = '春';
+        else if (currentMonth >= 6 && currentMonth <= 8) season = '夏';
+        else if (currentMonth >= 9 && currentMonth <= 11) season = '秋';
+        else season = '冬';
+
+        // 時間帯判定
+        let timeOfDay: string;
+        if (currentHour >= 5 && currentHour < 10) timeOfDay = '朝';
+        else if (currentHour >= 10 && currentHour < 17) timeOfDay = '昼';
+        else if (currentHour >= 17 && currentHour < 20) timeOfDay = '夕方';
+        else timeOfDay = '夜';
+
+        const scene = this.getSceneFromWeather(weatherCode, isDay, currentMonth, currentHour);
+
+        let reason: string;
+        if ([51, 53, 55, 61, 63, 65, 80, 81, 82, 95, 96, 99].includes(weatherCode)) {
+            reason = '雨天のため';
+        } else if ([71, 73, 75, 77, 85, 86].includes(weatherCode)) {
+            reason = '雪のため';
+        } else if (!isDay && (currentMonth >= 6 && currentMonth <= 9)) {
+            reason = `${season}の夜（虫が鳴く季節）`;
+        } else if (!isDay) {
+            reason = `${season}の夜（静かな風）`;
+        } else {
+            reason = `${season}の${timeOfDay}`;
+        }
+
+        return { scene, reason, season, timeOfDay };
     }
 
     /**
