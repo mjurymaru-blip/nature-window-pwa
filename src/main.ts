@@ -8,6 +8,8 @@ import { getLocation, fetchWeather, getWeatherCondition, getTimeOfDayTheme } fro
 import type { WeatherData } from './services/weatherApi';
 import { getCurrentSekki, getCurrentKou } from './services/seasonCalendar';
 import type { Sekki, Kou } from './services/seasonCalendar';
+import { soundController, SoundController } from './services/soundController';
+import type { SoundScene } from './services/soundController';
 
 // 状態管理
 interface AppState {
@@ -15,6 +17,8 @@ interface AppState {
   sekki: Sekki;
   kou: Kou;
   theme: string;
+  soundScene: SoundScene;
+  isSoundPlaying: boolean;
   isLoading: boolean;
   error: string | null;
 }
@@ -24,6 +28,8 @@ const state: AppState = {
   sekki: getCurrentSekki(),
   kou: getCurrentKou(),
   theme: getTimeOfDayTheme(),
+  soundScene: 'silent',
+  isSoundPlaying: false,
   isLoading: true,
   error: null
 };
@@ -56,6 +62,8 @@ function render(): void {
   }
 
   const condition = state.weather ? getWeatherCondition(state.weather.weatherCode) : null;
+  const soundIcon = state.isSoundPlaying ? '🔊' : '🔇';
+  const sceneLabel = getSoundSceneLabel(state.soundScene);
 
   app.innerHTML = `
     <div class="background"></div>
@@ -78,14 +86,57 @@ function render(): void {
       </div>
     </div>
     
-    <!-- 音声コントロール（フェーズ2で実装） -->
+    <!-- 音声コントロール -->
     <div class="sound-control">
-      <button class="sound-toggle" aria-label="音声切り替え">🔇</button>
+      <button class="sound-toggle" aria-label="音声切り替え" data-action="toggle-sound">
+        ${soundIcon}
+      </button>
+      <div class="sound-scene-label">${sceneLabel}</div>
     </div>
   `;
 
   // テーマクラスを適用
   document.body.className = `theme-${state.theme}`;
+
+  // イベントリスナーを設定
+  setupEventListeners();
+}
+
+/**
+ * サウンドシーンのラベルを取得
+ */
+function getSoundSceneLabel(scene: SoundScene): string {
+  const labels: Record<SoundScene, string> = {
+    rain: '雨音',
+    fire: '焚き火',
+    wind: '風',
+    night: '夜',
+    silent: '消音'
+  };
+  return labels[scene];
+}
+
+/**
+ * イベントリスナーを設定
+ */
+function setupEventListeners(): void {
+  // 音声トグルボタン
+  const soundToggle = document.querySelector('[data-action="toggle-sound"]');
+  if (soundToggle) {
+    soundToggle.addEventListener('click', handleSoundToggle);
+  }
+}
+
+/**
+ * 音声トグルハンドラ
+ */
+async function handleSoundToggle(): Promise<void> {
+  try {
+    state.isSoundPlaying = await soundController.toggle();
+    render();
+  } catch (e) {
+    console.error('音声の切り替えに失敗:', e);
+  }
 }
 
 /**
@@ -96,6 +147,15 @@ async function updateWeather(): Promise<void> {
     const location = await getLocation();
     state.weather = await fetchWeather(location);
     state.error = null;
+
+    // 天気に基づいてサウンドシーンを更新
+    if (state.weather) {
+      state.soundScene = SoundController.getSceneFromWeather(
+        state.weather.weatherCode,
+        state.weather.isDay
+      );
+      await soundController.setScene(state.soundScene);
+    }
   } catch (e) {
     console.error('天気の取得に失敗:', e);
     state.error = '天気情報を取得できませんでした';
@@ -115,8 +175,6 @@ function updateSeason(): void {
  */
 function updateTheme(): void {
   state.theme = getTimeOfDayTheme();
-
-  // 天気によるテーマ上書きはフェーズ2で実装
 }
 
 /**
@@ -152,7 +210,9 @@ async function init(): Promise<void> {
   }, 60 * 60 * 1000);
 
   console.log('Nature Window PWA 起動完了');
+  console.log(`サウンドシーン: ${state.soundScene} (音声ボタンをクリックで再生開始)`);
 }
 
 // アプリ起動
 init();
+

@@ -8,14 +8,15 @@
   --color-accent: #e94560;
   --color-text: #f5f5f5;
   --color-text-muted: #a0a0a0;
-  
+
   /* 時間帯別カラー（CSS変数で動的に切り替え） */
   --bg-gradient-start: var(--color-night-sky);
   --bg-gradient-mid: var(--color-deep-blue);
   --bg-gradient-end: var(--color-ocean);
-  
+
   /* アニメーション */
-  --transition-slow: 3600s; /* 1時間かけて変化（焼き付き防止） */
+  --transition-slow: 3600s;
+  /* 1時間かけて変化（焼き付き防止） */
   --transition-medium: 2s;
   --transition-fast: 0.3s;
 }
@@ -26,7 +27,8 @@
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   width: 100%;
   height: 100%;
   overflow: hidden;
@@ -52,19 +54,22 @@ html, body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    var(--bg-rotation, 0deg),
-    var(--bg-gradient-start) 0%,
-    var(--bg-gradient-mid) 50%,
-    var(--bg-gradient-end) 100%
-  );
+  background: linear-gradient(var(--bg-rotation, 0deg),
+      var(--bg-gradient-start) 0%,
+      var(--bg-gradient-mid) 50%,
+      var(--bg-gradient-end) 100%);
   animation: rotateGradient var(--transition-slow) linear infinite;
   z-index: -1;
 }
 
 @keyframes rotateGradient {
-  0% { --bg-rotation: 0deg; }
-  100% { --bg-rotation: 360deg; }
+  0% {
+    --bg-rotation: 0deg;
+  }
+
+  100% {
+    --bg-rotation: 360deg;
+  }
 }
 
 /* 季節・天気情報の表示エリア */
@@ -120,12 +125,45 @@ html, body {
   position: absolute;
   bottom: 5%;
   right: 5%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
   opacity: 0.5;
   transition: opacity var(--transition-fast);
 }
 
 .sound-control:hover {
   opacity: 1;
+}
+
+.sound-toggle {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sound-toggle:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.sound-toggle:active {
+  transform: scale(0.95);
+}
+
+.sound-scene-label {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  opacity: 0.7;
 }
 
 /* ローディング状態 */
@@ -143,8 +181,15 @@ html, body {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
+
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
 }
 
 /* 時間帯別のテーマ（JSから切り替え） */
