@@ -112,11 +112,18 @@ function render(): void {
  */
 function getSoundSceneLabel(scene: SoundScene): string {
   const labels: Record<SoundScene, string> = {
-    rain: '雨音',
-    fire: '焚き火',
-    wind: '風',
-    night: '夜',
-    silent: '消音'
+    rain: '🌧 雨音',
+    fire: '🔥 焚き火',
+    wind: '💨 風',
+    night: '🦗 夏の夜',
+    'night-autumn': '🍂 秋の夜',
+    'evening-summer': '🌅 夏の夕(ひぐらし)',
+    morning: '🐦 朝(鳥)',
+    cicada: '☀️ 夏の昼(セミ)',
+    snow: '❄️ 雪',
+    wave: '🌊 波',
+    stream: '🏞 小川',
+    silent: '🔇 消音'
   };
   return labels[scene];
 }

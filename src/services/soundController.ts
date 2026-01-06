@@ -3,7 +3,19 @@
  * Web Audio APIを使用して、自然な揺らぎを持つ環境音を再生
  */
 
-export type SoundScene = 'rain' | 'fire' | 'wind' | 'night' | 'silent';
+export type SoundScene =
+    | 'rain'           // 雨
+    | 'fire'           // 焚き火
+    | 'wind'           // 風
+    | 'night'          // 夏の夜（虫の声）
+    | 'night-autumn'   // 秋の夜（鈴虫系）
+    | 'evening-summer' // 夏の夕方（ひぐらし）
+    | 'morning'        // 朝（鳥のさえずり）
+    | 'cicada'         // 夏の昼（セミ）
+    | 'snow'           // 雪
+    | 'wave'           // 波
+    | 'stream'         // 小川
+    | 'silent';        // 無音
 
 interface SoundLayer {
     url: string;
@@ -19,7 +31,7 @@ interface SceneConfig {
     sub?: SoundLayer[];
 }
 
-// 音源設定（URLはプレースホルダー、後で実際のファイルに置換）
+// シーン設定
 const SCENE_CONFIGS: Record<SoundScene, SceneConfig | null> = {
     rain: {
         main: {
@@ -33,7 +45,7 @@ const SCENE_CONFIGS: Record<SoundScene, SceneConfig | null> = {
                 volume: 0.2,
                 loop: false,
                 isSubSound: true,
-                minInterval: 30000,  // 30秒〜2分間隔で雷
+                minInterval: 30000,
                 maxInterval: 120000
             }
         ]
@@ -43,17 +55,8 @@ const SCENE_CONFIGS: Record<SoundScene, SceneConfig | null> = {
             url: '/sounds/fire-crackles.mp3',
             volume: 0.5,
             loop: true
-        },
-        sub: [
-            {
-                url: '/sounds/fire-pop.mp3',
-                volume: 0.3,
-                loop: false,
-                isSubSound: true,
-                minInterval: 5000,   // 5秒〜20秒間隔で薪が爆ぜる
-                maxInterval: 20000
-            }
-        ]
+        }
+        // fire-pop.mp3は不要（メインに含まれる）
     },
     wind: {
         main: {
@@ -84,10 +87,69 @@ const SCENE_CONFIGS: Record<SoundScene, SceneConfig | null> = {
                 volume: 0.15,
                 loop: false,
                 isSubSound: true,
-                minInterval: 60000,  // 1分〜3分間隔でフクロウ
+                minInterval: 60000,
                 maxInterval: 180000
             }
         ]
+    },
+    'night-autumn': {
+        main: {
+            url: '/sounds/insects-loop.mp3',  // 秋の虫用に別音源があれば置換
+            volume: 0.25,
+            loop: true
+        }
+    },
+    'evening-summer': {
+        main: {
+            url: '/sounds/cicada-loop.mp3',  // ひぐらし用に別音源があれば置換
+            volume: 0.35,
+            loop: true
+        },
+        sub: [
+            {
+                url: '/sounds/crows-evening.mp3',
+                volume: 0.15,
+                loop: false,
+                isSubSound: true,
+                minInterval: 45000,
+                maxInterval: 120000
+            }
+        ]
+    },
+    morning: {
+        main: {
+            url: '/sounds/birds-morning.mp3',
+            volume: 0.35,
+            loop: true
+        }
+    },
+    cicada: {
+        main: {
+            url: '/sounds/cicada-loop.mp3',
+            volume: 0.4,
+            loop: true
+        }
+    },
+    snow: {
+        main: {
+            url: '/sounds/wind-loop.mp3',  // 雪用に静かな風を使用
+            volume: 0.15,
+            loop: true
+        }
+    },
+    wave: {
+        main: {
+            url: '/sounds/stream-loop.mp3',  // 波用に別音源があれば置換
+            volume: 0.4,
+            loop: true
+        }
+    },
+    stream: {
+        main: {
+            url: '/sounds/stream-loop.mp3',
+            volume: 0.35,
+            loop: true
+        }
     },
     silent: null
 };
@@ -304,66 +366,83 @@ export class SoundController {
     /**
      * 天気・時間帯・季節からシーンを決定
      * 
-     * 判定優先順位:
-     * 1. 天気（雨/雷雨は最優先）
-     * 2. 時間帯 × 季節の組み合わせ
-     * 
-     * シーンマトリクス:
-     * | 季節     | 朝〜昼（晴れ/曇り） | 夜（晴れ/曇り） |
-     * |----------|---------------------|-----------------|
-     * | 春(3-5)  | 風（葉擦れ）        | 風              |
-     * | 夏(6-8)  | 風（葉擦れ）        | 夜（虫の声）    |
-     * | 秋(9-11) | 風（葉擦れ）        | 夜（虫、9月のみ）/風 |
-     * | 冬(12-2) | 風                  | 風              |
+     * マトリクス:
+     * | 季節     | 朝(5-9)      | 昼(10-16)    | 夕(17-19)        | 夜(20-4)      |
+     * |----------|--------------|--------------|------------------|---------------|
+     * | 春(3-5)  | 朝(鳥)       | 風           | 風               | 風            |
+     * | 夏(6-8)  | 朝(鳥)       | セミ         | ひぐらし         | 夏の夜(虫)    |
+     * | 秋(9-11) | 朝(鳥)/風    | 風           | 風/夕(カラス)    | 秋の夜/風     |
+     * | 冬(12-2) | 風           | 風           | 風               | 風/雪         |
      */
     static getSceneFromWeather(
         weatherCode: number,
-        isDay: boolean,
+        _isDay: boolean,  // 時間帯判定で代替
         month?: number,
         hour?: number
     ): SoundScene {
         const currentMonth = month ?? new Date().getMonth() + 1;
         const currentHour = hour ?? new Date().getHours();
 
+        // 季節判定
+        const isSummer = currentMonth >= 6 && currentMonth <= 8;
+        const isEarlyAutumn = currentMonth === 9;
+        const isAutumn = currentMonth >= 9 && currentMonth <= 11;
+        const isWinter = currentMonth === 12 || currentMonth <= 2;
+        const isSpring = currentMonth >= 3 && currentMonth <= 5;
+
+        // 時間帯判定
+        const isMorning = currentHour >= 5 && currentHour < 10;
+        const isMidday = currentHour >= 10 && currentHour < 17;
+        const isEvening = currentHour >= 17 && currentHour < 20;
+        const isNight = currentHour >= 20 || currentHour < 5;
+
         // === 天気優先判定 ===
 
-        // 雨系（霧雨〜強い雨、にわか雨）
-        if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(weatherCode)) {
+        // 雨系
+        if ([51, 53, 55, 61, 63, 65, 80, 81, 82, 95, 96, 99].includes(weatherCode)) {
             return 'rain';
         }
-        // 雷雨
-        if ([95, 96, 99].includes(weatherCode)) {
-            return 'rain';
-        }
-        // 雪（冬らしい静かな風）
+        // 雪
         if ([71, 73, 75, 77, 85, 86].includes(weatherCode)) {
+            return 'snow';
+        }
+
+        // === 季節 × 時間帯 判定 ===
+
+        // 夏
+        if (isSummer) {
+            if (isMorning) return 'morning';
+            if (isMidday) return 'cicada';
+            if (isEvening) return 'evening-summer';
+            if (isNight) return 'night';
+        }
+
+        // 初秋（9月）
+        if (isEarlyAutumn) {
+            if (isMorning) return 'morning';
+            if (isEvening) return 'evening-summer';  // まだひぐらし
+            if (isNight) return 'night-autumn';
             return 'wind';
         }
 
-        // === 時間帯 × 季節 判定 ===
-
-        // 夜（日没後〜日の出前）
-        if (!isDay || currentHour < 5 || currentHour >= 20) {
-            // 夏の夜（6-8月）: 虫の声
-            if (currentMonth >= 6 && currentMonth <= 8) {
-                return 'night';
-            }
-            // 初秋の夜（9月）: まだ虫の声
-            if (currentMonth === 9) {
-                return 'night';
-            }
-            // それ以外の夜: 風（冬や春は虫が鳴かない）
+        // 秋（10-11月）
+        if (isAutumn && !isEarlyAutumn) {
+            if (isNight) return 'wind';  // 寒くなると虫も減る
             return 'wind';
         }
 
-        // === 昼間 ===
+        // 冬
+        if (isWinter) {
+            return isNight ? 'snow' : 'wind';
+        }
 
-        // 曇り〜霧（やや静かな風）
-        if ([2, 3, 45, 48].includes(weatherCode)) {
+        // 春
+        if (isSpring) {
+            if (isMorning) return 'morning';
             return 'wind';
         }
 
-        // 晴れ（デフォルト: 風）
+        // デフォルト
         return 'wind';
     }
 
@@ -395,18 +474,7 @@ export class SoundController {
 
         const scene = this.getSceneFromWeather(weatherCode, isDay, currentMonth, currentHour);
 
-        let reason: string;
-        if ([51, 53, 55, 61, 63, 65, 80, 81, 82, 95, 96, 99].includes(weatherCode)) {
-            reason = '雨天のため';
-        } else if ([71, 73, 75, 77, 85, 86].includes(weatherCode)) {
-            reason = '雪のため';
-        } else if (!isDay && (currentMonth >= 6 && currentMonth <= 9)) {
-            reason = `${season}の夜（虫が鳴く季節）`;
-        } else if (!isDay) {
-            reason = `${season}の夜（静かな風）`;
-        } else {
-            reason = `${season}の${timeOfDay}`;
-        }
+        const reason = `${season}の${timeOfDay}`;
 
         return { scene, reason, season, timeOfDay };
     }
@@ -415,7 +483,11 @@ export class SoundController {
      * 利用可能なシーン一覧を取得
      */
     static getAvailableScenes(): SoundScene[] {
-        return ['rain', 'fire', 'wind', 'night', 'silent'];
+        return [
+            'rain', 'fire', 'wind', 'night', 'night-autumn',
+            'evening-summer', 'morning', 'cicada', 'snow',
+            'wave', 'stream', 'silent'
+        ];
     }
 }
 
