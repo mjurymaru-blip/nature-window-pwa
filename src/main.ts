@@ -90,7 +90,8 @@ function render(): void {
       <button class="sound-toggle" aria-label="音声切り替え" data-action="toggle-sound">
         ${soundIcon}
       </button>
-      <select class="sound-scene-select" data-action="change-scene">
+      <label for="sound-scene-select" class="visually-hidden">音声シーン選択</label>
+      <select id="sound-scene-select" class="sound-scene-select" data-action="change-scene">
         ${SoundController.getAvailableScenes().map(scene => `
           <option value="${scene}" ${scene === state.soundScene ? 'selected' : ''}>
             ${getSoundSceneLabel(scene)}
