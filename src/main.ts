@@ -63,7 +63,6 @@ function render(): void {
 
   const condition = state.weather ? getWeatherCondition(state.weather.weatherCode) : null;
   const soundIcon = state.isSoundPlaying ? '🔊' : '🔇';
-  const sceneLabel = getSoundSceneLabel(state.soundScene);
 
   app.innerHTML = `
     <div class="background"></div>
@@ -91,7 +90,13 @@ function render(): void {
       <button class="sound-toggle" aria-label="音声切り替え" data-action="toggle-sound">
         ${soundIcon}
       </button>
-      <div class="sound-scene-label">${sceneLabel}</div>
+      <select class="sound-scene-select" data-action="change-scene">
+        ${SoundController.getAvailableScenes().map(scene => `
+          <option value="${scene}" ${scene === state.soundScene ? 'selected' : ''}>
+            ${getSoundSceneLabel(scene)}
+          </option>
+        `).join('')}
+      </select>
     </div>
   `;
 
@@ -125,6 +130,12 @@ function setupEventListeners(): void {
   if (soundToggle) {
     soundToggle.addEventListener('click', handleSoundToggle);
   }
+
+  // シーン切り替えセレクト
+  const sceneSelect = document.querySelector('[data-action="change-scene"]') as HTMLSelectElement;
+  if (sceneSelect) {
+    sceneSelect.addEventListener('change', handleSceneChange);
+  }
 }
 
 /**
@@ -136,6 +147,28 @@ async function handleSoundToggle(): Promise<void> {
     render();
   } catch (e) {
     console.error('音声の切り替えに失敗:', e);
+  }
+}
+
+/**
+ * シーン切り替えハンドラ
+ */
+async function handleSceneChange(event: Event): Promise<void> {
+  const select = event.target as HTMLSelectElement;
+  const newScene = select.value as SoundScene;
+
+  try {
+    state.soundScene = newScene;
+    await soundController.setScene(newScene);
+
+    // 再生中の場合は新しいシーンで再生開始
+    if (state.isSoundPlaying) {
+      await soundController.play();
+    }
+
+    console.log(`シーンを ${getSoundSceneLabel(newScene)} に変更`);
+  } catch (e) {
+    console.error('シーンの切り替えに失敗:', e);
   }
 }
 

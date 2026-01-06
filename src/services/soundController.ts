@@ -302,9 +302,9 @@ export class SoundController {
     }
 
     /**
-     * 天気コードからシーンを決定
+     * 天気コードからシーンを決定（季節考慮）
      */
-    static getSceneFromWeather(weatherCode: number, isDay: boolean): SoundScene {
+    static getSceneFromWeather(weatherCode: number, isDay: boolean, month?: number): SoundScene {
         // 雨系
         if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(weatherCode)) {
             return 'rain';
@@ -315,7 +315,14 @@ export class SoundController {
         }
         // 夜
         if (!isDay) {
-            return 'night';
+            // 季節による夜の音の使い分け
+            const currentMonth = month ?? new Date().getMonth() + 1;
+            // 夏（6-9月）は虫の声
+            if (currentMonth >= 6 && currentMonth <= 9) {
+                return 'night';
+            }
+            // それ以外の季節は風（冬に虫の声は不自然）
+            return 'wind';
         }
         // 風が強い（曇り〜晴れ）
         if ([2, 3, 45, 48].includes(weatherCode)) {
@@ -323,6 +330,13 @@ export class SoundController {
         }
         // デフォルト（静か or 風）
         return 'wind';
+    }
+
+    /**
+     * 利用可能なシーン一覧を取得
+     */
+    static getAvailableScenes(): SoundScene[] {
+        return ['rain', 'fire', 'wind', 'night', 'silent'];
     }
 }
 
