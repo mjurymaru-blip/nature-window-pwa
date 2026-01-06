@@ -40,7 +40,7 @@ const SCENE_CONFIGS: Record<SoundScene, SceneConfig | null> = {
     },
     fire: {
         main: {
-            url: '/sounds/fire-crackle.mp3',
+            url: '/sounds/fire-crackles.mp3',
             volume: 0.5,
             loop: true
         },
