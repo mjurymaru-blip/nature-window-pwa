@@ -94,14 +94,14 @@ const SCENE_CONFIGS: Record<SoundScene, SceneConfig | null> = {
     },
     'night-autumn': {
         main: {
-            url: '/sounds/insects-loop.mp3',  // 秋の虫用に別音源があれば置換
+            url: '/sounds/autumn-insects.mp3',
             volume: 0.25,
             loop: true
         }
     },
     'evening-summer': {
         main: {
-            url: '/sounds/cicada-loop.mp3',  // ひぐらし用に別音源があれば置換
+            url: '/sounds/higurashi-loop.mp3',
             volume: 0.35,
             loop: true
         },
@@ -132,14 +132,14 @@ const SCENE_CONFIGS: Record<SoundScene, SceneConfig | null> = {
     },
     snow: {
         main: {
-            url: '/sounds/wind-loop.mp3',  // 雪用に静かな風を使用
-            volume: 0.15,
+            url: '/sounds/snow-wind.mp3',
+            volume: 0.2,
             loop: true
         }
     },
     wave: {
         main: {
-            url: '/sounds/stream-loop.mp3',  // 波用に別音源があれば置換
+            url: '/sounds/wave-loop.mp3',
             volume: 0.4,
             loop: true
         }
