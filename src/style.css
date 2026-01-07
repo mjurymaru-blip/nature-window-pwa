@@ -313,9 +313,9 @@ body.theme-evening.fireplace-active {
   --bg-gradient-end: #e86b6b;
 }
 
-/* 夜 × 焚き火 の最深状態 */
+/* 夜 × 焚き火 の最深状態 - より暖かい色調に */
 body.theme-night.fireplace-active {
-  --bg-gradient-start: #2a1a1a;
-  --bg-gradient-mid: #352218;
-  --bg-gradient-end: #1a1520;
+  --bg-gradient-start: #3d2020;
+  --bg-gradient-mid: #4a2a18;
+  --bg-gradient-end: #2a1820;
 }
