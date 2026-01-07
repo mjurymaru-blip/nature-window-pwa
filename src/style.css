@@ -290,12 +290,27 @@ body {
   box-shadow: 0 0 15px rgba(255, 100, 50, 0.4);
 }
 
-/* 焚き火モード時の背景シフト（暖色） */
-body.fireplace-active {
-  /* 色温度を上げるだけ。明度は上げない。 */
-  --bg-gradient-start: #2d1f1f;
-  --bg-gradient-mid: #3d2a1a;
-  --bg-gradient-end: #1a1a2e;
+/* 焚き火モード時の背景シフト（暖色） - 各テーマ別に定義 */
+
+/* 朝 × 焚き火 */
+body.theme-morning.fireplace-active {
+  --bg-gradient-start: #e89a8e;
+  --bg-gradient-mid: #eab0a4;
+  --bg-gradient-end: #e8d0c2;
+}
+
+/* 昼 × 焚き火 */
+body.theme-day.fireplace-active {
+  --bg-gradient-start: #c4a4dd;
+  --bg-gradient-mid: #d2c9eb;
+  --bg-gradient-end: #e0e7ea;
+}
+
+/* 夕方 × 焚き火 */
+body.theme-evening.fireplace-active {
+  --bg-gradient-start: #e8709a;
+  --bg-gradient-mid: #eea140;
+  --bg-gradient-end: #e86b6b;
 }
 
 /* 夜 × 焚き火 の最深状態 */
