@@ -204,6 +204,12 @@ export class SoundController {
     private masterVolume: number = 0.5;
     private audioCache: Map<string, AudioBuffer> = new Map();
 
+    // === 焚き火オーバーレイ用 ===
+    private fireplaceGain: GainNode | null = null;
+    private fireplaceSource: AudioBufferSourceNode | null = null;
+    private fireplaceBuffer: AudioBuffer | null = null;
+    private isFireplaceActive: boolean = false;
+
     /**
      * AudioContextを初期化（ユーザー操作後に呼び出す必要あり）
      */
@@ -389,17 +395,120 @@ export class SoundController {
         if (this.gainNode) {
             this.gainNode.gain.value = this.masterVolume;
         }
+        // 焚き火も同じ音量に連動
+        if (this.fireplaceGain) {
+            const presence = SCENE_PRESENCE.fire;
+            this.fireplaceGain.gain.value = this.masterVolume * (presence?.baseVolume ?? 0.35);
+        }
     }
 
     /**
      * 現在の状態を取得
      */
-    getState(): { scene: SoundScene; isPlaying: boolean; volume: number } {
+    getState(): { scene: SoundScene; isPlaying: boolean; volume: number; isFireplaceActive: boolean } {
         return {
             scene: this.currentScene,
             isPlaying: this.isPlaying,
-            volume: this.masterVolume
+            volume: this.masterVolume,
+            isFireplaceActive: this.isFireplaceActive
         };
+    }
+
+    // ===== 焚き火オーバーレイ機能 =====
+
+    /**
+     * 焚き火オーバーレイを有効化
+     * 既存のシーンと同時に焚き火音を再生
+     */
+    async enableFireplaceOverlay(): Promise<void> {
+        if (!this.audioContext) {
+            await this.init();
+        }
+        if (!this.audioContext) return;
+
+        // 既にアクティブなら何もしない
+        if (this.isFireplaceActive && this.fireplaceSource) return;
+
+        const fireConfig = SCENE_CONFIGS.fire;
+        if (!fireConfig) return;
+
+        try {
+            // 焚き火用ゲインノードを作成
+            if (!this.fireplaceGain) {
+                this.fireplaceGain = this.audioContext.createGain();
+                this.fireplaceGain.connect(this.audioContext.destination);
+            }
+
+            // SoundPresenceから音量を設定
+            const presence = SCENE_PRESENCE.fire;
+            const targetVolume = this.masterVolume * (presence?.baseVolume ?? 0.35);
+
+            // 焚き火音をロード
+            if (!this.fireplaceBuffer) {
+                this.fireplaceBuffer = await this.loadAudio(fireConfig.main.url);
+            }
+
+            // フェードインで開始
+            this.fireplaceGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+            this.fireplaceGain.gain.linearRampToValueAtTime(
+                targetVolume,
+                this.audioContext.currentTime + 2 // 2秒でフェードイン
+            );
+
+            // ソースを作成して再生
+            this.fireplaceSource = this.audioContext.createBufferSource();
+            this.fireplaceSource.buffer = this.fireplaceBuffer;
+            this.fireplaceSource.loop = true;
+            this.fireplaceSource.connect(this.fireplaceGain);
+            this.fireplaceSource.start();
+
+            this.isFireplaceActive = true;
+            console.log('焚き火オーバーレイを有効化しました 🔥');
+
+        } catch (e) {
+            console.error('焚き火オーバーレイの有効化に失敗:', e);
+        }
+    }
+
+    /**
+     * 焚き火オーバーレイを無効化
+     * フェードアウトしながら停止
+     */
+    disableFireplaceOverlay(): void {
+        if (!this.isFireplaceActive || !this.fireplaceSource || !this.fireplaceGain || !this.audioContext) {
+            this.isFireplaceActive = false;
+            return;
+        }
+
+        const currentTime = this.audioContext.currentTime;
+
+        // 2秒でフェードアウト
+        this.fireplaceGain.gain.setValueAtTime(
+            this.fireplaceGain.gain.value,
+            currentTime
+        );
+        this.fireplaceGain.gain.linearRampToValueAtTime(0, currentTime + 2);
+
+        // フェードアウト完了後に停止
+        const sourceToStop = this.fireplaceSource;
+        setTimeout(() => {
+            try {
+                sourceToStop.stop();
+            } catch {
+                // 既に停止済みの場合は無視
+            }
+        }, 2100);
+
+        this.fireplaceSource = null;
+        this.isFireplaceActive = false;
+        console.log('焚き火オーバーレイを無効化しました');
+    }
+
+    /**
+     * 焚き火オーバーレイの状態を取得
+     */
+    getFireplaceStatus(): boolean {
+        return this.isFireplaceActive;
     }
 
     /**

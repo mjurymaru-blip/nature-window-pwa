@@ -19,8 +19,19 @@ interface AppState {
   theme: string;
   soundScene: SoundScene;
   isSoundPlaying: boolean;
+  isFireplaceActive: boolean;  // 焚き火オーバーレイ
   isLoading: boolean;
   error: string | null;
+}
+
+// localStorageから焚き火状態を復元
+const FIREPLACE_STORAGE_KEY = 'nature-window-fireplace';
+function loadFireplaceState(): boolean {
+  try {
+    return localStorage.getItem(FIREPLACE_STORAGE_KEY) === 'true';
+  } catch {
+    return false;
+  }
 }
 
 const state: AppState = {
@@ -30,6 +41,7 @@ const state: AppState = {
   theme: getTimeOfDayTheme(),
   soundScene: 'silent',
   isSoundPlaying: false,
+  isFireplaceActive: loadFireplaceState(),
   isLoading: true,
   error: null
 };
@@ -87,6 +99,13 @@ function render(): void {
     
     <!-- 音声コントロール -->
     <div class="sound-control">
+      <button 
+        class="fireplace-toggle ${state.isFireplaceActive ? 'active' : ''}" 
+        aria-label="焚き火モード" 
+        data-action="toggle-fireplace"
+      >
+        🔥
+      </button>
       <button class="sound-toggle" aria-label="音声切り替え" data-action="toggle-sound">
         ${soundIcon}
       </button>
@@ -101,8 +120,12 @@ function render(): void {
     </div>
   `;
 
-  // テーマクラスを適用
-  document.body.className = `theme-${state.theme}`;
+  // テーマクラスを適用（焚き火モード対応）
+  let bodyClass = `theme-${state.theme}`;
+  if (state.isFireplaceActive) {
+    bodyClass += ' fireplace-active';
+  }
+  document.body.className = bodyClass;
 
   // イベントリスナーを設定
   setupEventListeners();
@@ -144,6 +167,12 @@ function setupEventListeners(): void {
   if (sceneSelect) {
     sceneSelect.addEventListener('change', handleSceneChange);
   }
+
+  // 焚き火トグルボタン
+  const fireplaceToggle = document.querySelector('[data-action="toggle-fireplace"]');
+  if (fireplaceToggle) {
+    fireplaceToggle.addEventListener('click', handleFireplaceToggle);
+  }
 }
 
 /**
@@ -152,6 +181,12 @@ function setupEventListeners(): void {
 async function handleSoundToggle(): Promise<void> {
   try {
     state.isSoundPlaying = await soundController.toggle();
+
+    // 音声ONで焚き火もONなら、焚き火も一緒にフェードイン
+    if (state.isSoundPlaying && state.isFireplaceActive) {
+      await soundController.enableFireplaceOverlay();
+    }
+
     render();
   } catch (e) {
     console.error('音声の切り替えに失敗:', e);
@@ -177,6 +212,32 @@ async function handleSceneChange(event: Event): Promise<void> {
     console.log(`シーンを ${getSoundSceneLabel(newScene)} に変更`);
   } catch (e) {
     console.error('シーンの切り替えに失敗:', e);
+  }
+}
+
+/**
+ * 焚き火トグルハンドラ
+ */
+async function handleFireplaceToggle(): Promise<void> {
+  try {
+    state.isFireplaceActive = !state.isFireplaceActive;
+
+    // localStorageに保存
+    localStorage.setItem(FIREPLACE_STORAGE_KEY, state.isFireplaceActive.toString());
+
+    // 音声再生中なら焚き火音も制御
+    if (state.isSoundPlaying) {
+      if (state.isFireplaceActive) {
+        await soundController.enableFireplaceOverlay();
+      } else {
+        soundController.disableFireplaceOverlay();
+      }
+    }
+
+    render();
+    console.log(`焚き火モード: ${state.isFireplaceActive ? 'ON 🔥' : 'OFF'}`);
+  } catch (e) {
+    console.error('焚き火の切り替えに失敗:', e);
   }
 }
 

@@ -256,3 +256,51 @@ body {
   --bg-gradient-mid: #16213e;
   --bg-gradient-end: #0f3460;
 }
+
+/* ===== 焚き火モード ===== */
+
+/* 焚き火トグルボタン */
+.fireplace-toggle {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fireplace-toggle:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.fireplace-toggle:active {
+  transform: scale(0.95);
+}
+
+/* 焚き火アクティブ時のグロー効果 */
+.fireplace-toggle.active {
+  background: rgba(255, 100, 50, 0.3);
+  border-color: rgba(255, 150, 50, 0.5);
+  box-shadow: 0 0 15px rgba(255, 100, 50, 0.4);
+}
+
+/* 焚き火モード時の背景シフト（暖色） */
+body.fireplace-active {
+  /* 色温度を上げるだけ。明度は上げない。 */
+  --bg-gradient-start: #2d1f1f;
+  --bg-gradient-mid: #3d2a1a;
+  --bg-gradient-end: #1a1a2e;
+}
+
+/* 夜 × 焚き火 の最深状態 */
+body.theme-night.fireplace-active {
+  --bg-gradient-start: #2a1a1a;
+  --bg-gradient-mid: #352218;
+  --bg-gradient-end: #1a1520;
+}
