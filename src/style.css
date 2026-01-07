@@ -320,7 +320,7 @@ body.theme-night.fireplace-active {
   --bg-gradient-end: #402030;
 }
 
-/* 焚き火モード時の暖色オーバーレイ（右下から広がる） */
+/* 焚き火モード時の暖色オーバーレイ（右下から控えめに広がる） */
 body.fireplace-active .background::after {
   content: '';
   position: fixed;
@@ -329,12 +329,11 @@ body.fireplace-active .background::after {
   width: 100%;
   height: 100%;
   background: radial-gradient(ellipse 120% 120% at 85% 85%,
-      rgba(220, 120, 60, 0.5) 0%,
-      rgba(180, 90, 50, 0.4) 20%,
-      rgba(140, 70, 40, 0.3) 40%,
-      rgba(100, 50, 30, 0.2) 60%,
-      rgba(60, 30, 20, 0.1) 80%,
-      transparent 100%);
+      rgba(200, 100, 50, 0.25) 0%,
+      rgba(160, 80, 45, 0.18) 20%,
+      rgba(120, 60, 35, 0.12) 40%,
+      rgba(80, 40, 25, 0.06) 60%,
+      transparent 80%);
   pointer-events: none;
   z-index: 1;
   animation: fireplaceGlow 4s ease-in-out infinite;
@@ -344,7 +343,7 @@ body.fireplace-active .background::after {
 
   0%,
   100% {
-    opacity: 0.7;
+    opacity: 0.8;
   }
 
   50% {
