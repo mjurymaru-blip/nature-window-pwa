@@ -218,6 +218,69 @@ function updateTheme(): void {
   state.theme = getTimeOfDayTheme();
 }
 
+// ===== タイマー管理（Page Visibility API対応） =====
+
+let weatherIntervalId: number | null = null;
+let themeIntervalId: number | null = null;
+
+/**
+ * 定期更新タイマーを開始
+ */
+function startIntervals(): void {
+  // 天気: 30分ごと
+  if (weatherIntervalId === null) {
+    weatherIntervalId = window.setInterval(async () => {
+      await updateWeather();
+      render();
+    }, 30 * 60 * 1000);
+  }
+
+  // 季節・テーマ: 1時間ごと
+  if (themeIntervalId === null) {
+    themeIntervalId = window.setInterval(() => {
+      updateSeason();
+      updateTheme();
+      render();
+    }, 60 * 60 * 1000);
+  }
+
+  console.log('タイマーを開始しました');
+}
+
+/**
+ * 定期更新タイマーを停止
+ */
+function stopIntervals(): void {
+  if (weatherIntervalId !== null) {
+    clearInterval(weatherIntervalId);
+    weatherIntervalId = null;
+  }
+  if (themeIntervalId !== null) {
+    clearInterval(themeIntervalId);
+    themeIntervalId = null;
+  }
+
+  console.log('タイマーを停止しました（バックグラウンド）');
+}
+
+/**
+ * Page Visibility API: タブの表示状態変化を検知
+ */
+function handleVisibilityChange(): void {
+  if (document.hidden) {
+    // バックグラウンド: タイマー停止
+    stopIntervals();
+  } else {
+    // フォアグラウンド復帰: 即時更新 + タイマー再開
+    console.log('フォアグラウンド復帰: 即時更新を実行');
+    updateWeather().then(() => render());
+    updateSeason();
+    updateTheme();
+    render();
+    startIntervals();
+  }
+}
+
 /**
  * アプリを初期化
  */
@@ -236,19 +299,11 @@ async function init(): Promise<void> {
   state.isLoading = false;
   render();
 
-  // 定期更新
-  // 天気: 30分ごと
-  setInterval(async () => {
-    await updateWeather();
-    render();
-  }, 30 * 60 * 1000);
+  // 定期更新タイマーを開始
+  startIntervals();
 
-  // 季節・テーマ: 1時間ごと
-  setInterval(() => {
-    updateSeason();
-    updateTheme();
-    render();
-  }, 60 * 60 * 1000);
+  // Page Visibility API: バックグラウンド/フォアグラウンド切り替え検知
+  document.addEventListener('visibilitychange', handleVisibilityChange);
 
   console.log('Nature Window PWA 起動完了');
   console.log(`サウンドシーン: ${state.soundScene} (音声ボタンをクリックで再生開始)`);
@@ -256,4 +311,3 @@ async function init(): Promise<void> {
 
 // アプリ起動
 init();
-

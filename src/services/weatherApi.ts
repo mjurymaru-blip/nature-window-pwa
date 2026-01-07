@@ -144,27 +144,136 @@ export function setCustomLocation(location: Location): void {
     saveLocation(location);
 }
 
+// ===== オフラインキャッシュ機能 =====
+
+const WEATHER_CACHE_KEY = 'nature-window-weather-cache';
+const CACHE_MAX_AGE_MS = 12 * 60 * 60 * 1000; // 12時間
+
+interface CachedWeather {
+    data: WeatherData;
+    fetchedAt: number;
+}
+
 /**
- * 天気情報を取得
+ * 天気データをキャッシュに保存
+ */
+function saveWeatherCache(weatherData: WeatherData): void {
+    try {
+        const cache: CachedWeather = {
+            data: weatherData,
+            fetchedAt: Date.now()
+        };
+        localStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify(cache));
+    } catch (e) {
+        console.warn('天気キャッシュの保存に失敗:', e);
+    }
+}
+
+/**
+ * キャッシュから天気データを取得（有効期限チェック付き）
+ */
+function getWeatherCache(): WeatherData | null {
+    try {
+        const cached = localStorage.getItem(WEATHER_CACHE_KEY);
+        if (!cached) return null;
+        
+        const { data, fetchedAt }: CachedWeather = JSON.parse(cached);
+        const age = Date.now() - fetchedAt;
+        
+        // 12時間以内のキャッシュなら有効
+        if (age < CACHE_MAX_AGE_MS) {
+            console.log(`天気キャッシュを使用 (${Math.round(age / 60000)}分前のデータ)`);
+            return data;
+        }
+        
+        console.log('天気キャッシュが古すぎます（12時間超過）');
+        return null;
+    } catch (e) {
+        console.warn('天気キャッシュの読み込みに失敗:', e);
+        return null;
+    }
+}
+
+/**
+ * 季節に合わせたデフォルト天気を返す
+ */
+function getSeasonalDefaultWeather(): WeatherData {
+    const month = new Date().getMonth() + 1;
+    const hour = new Date().getHours();
+    const isDay = hour >= 6 && hour < 18;
+    
+    // 季節に応じた天気コード
+    let weatherCode: number;
+    let temperature: number;
+    
+    if (month >= 3 && month <= 5) {
+        // 春: 晴れ、15度
+        weatherCode = 1;
+        temperature = 15;
+    } else if (month >= 6 && month <= 8) {
+        // 夏: 晴れ、28度
+        weatherCode = 0;
+        temperature = 28;
+    } else if (month >= 9 && month <= 11) {
+        // 秋: 薄曇り、18度
+        weatherCode = 2;
+        temperature = 18;
+    } else {
+        // 冬: 晴れ、5度
+        weatherCode = 1;
+        temperature = 5;
+    }
+    
+    console.log('季節のデフォルト天気を使用');
+    
+    return {
+        temperature,
+        weatherCode,
+        windSpeed: 5,
+        isDay,
+        time: new Date().toISOString()
+    };
+}
+
+/**
+ * 天気情報を取得（キャッシュ対応）
  */
 export async function fetchWeather(location: Location): Promise<WeatherData> {
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current_weather=true&timezone=Asia%2FTokyo`;
 
-    const response = await fetch(url);
-    if (!response.ok) {
-        throw new Error(`Weather API error: ${response.status}`);
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Weather API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const current = data.current_weather;
+
+        const weatherData: WeatherData = {
+            temperature: current.temperature,
+            weatherCode: current.weathercode,
+            windSpeed: current.windspeed,
+            isDay: current.is_day === 1,
+            time: current.time
+        };
+        
+        // 成功時: キャッシュに保存
+        saveWeatherCache(weatherData);
+        
+        return weatherData;
+    } catch (e) {
+        console.warn('天気APIリクエスト失敗:', e);
+        
+        // フォールバック1: キャッシュから取得
+        const cached = getWeatherCache();
+        if (cached) {
+            return cached;
+        }
+        
+        // フォールバック2: 季節のデフォルト天気
+        return getSeasonalDefaultWeather();
     }
-
-    const data = await response.json();
-    const current = data.current_weather;
-
-    return {
-        temperature: current.temperature,
-        weatherCode: current.weathercode,
-        windSpeed: current.windspeed,
-        isDay: current.is_day === 1,
-        time: current.time
-    };
 }
 
 /**

@@ -31,6 +31,45 @@ interface SceneConfig {
     sub?: SoundLayer[];
 }
 
+/**
+ * 音の「存在感」を定義する型
+ * 
+ * UIに出さない。設計レベルでのドキュメンテーション。
+ * 「これは音量調整ではなく、存在感の設計である」という認識をコードに残す。
+ * 
+ * @see ChatGPT/Geminiレビュー: フェーズ2.5で概念を定義、数値は後で調整
+ */
+export interface SoundPresence {
+    /** 平均音量 (0.0 - 1.0) */
+    baseVolume: number;
+    /** 揺らぎ幅 (±) */
+    fluctuation: number;
+    /** 発音頻度係数 (0.0 - 1.0, 高いほど頻繁) */
+    density: number;
+}
+
+/**
+ * シーンごとの存在感定義（フェーズ3: 焚き火モードで使用予定）
+ * 
+ * 将来の拡張余地:
+ * - frequencyBias（高音/低音）
+ * - spatiality（PannerNode）
+ * - decay（余韻）
+ */
+export const SCENE_PRESENCE: Partial<Record<SoundScene, SoundPresence>> = {
+    fire: {
+        baseVolume: 0.35,
+        fluctuation: 0.08,
+        density: 0.6,
+    },
+    rain: {
+        baseVolume: 0.4,
+        fluctuation: 0.05,
+        density: 0.3,  // 雷は稀
+    },
+    // 他シーンはフェーズ3以降で追加
+};
+
 // シーン設定
 const SCENE_CONFIGS: Record<SoundScene, SceneConfig | null> = {
     rain: {
