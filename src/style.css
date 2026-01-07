@@ -320,7 +320,7 @@ body.theme-night.fireplace-active {
   --bg-gradient-end: #402030;
 }
 
-/* 焚き火モード時の暖色オーバーレイ（右下から控えめに広がる） */
+/* 焚き火モード時の暖色オーバーレイ（右下コーナーに集中） */
 body.fireplace-active .background::after {
   content: '';
   position: fixed;
@@ -328,12 +328,11 @@ body.fireplace-active .background::after {
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(ellipse 120% 120% at 85% 85%,
-      rgba(200, 100, 50, 0.25) 0%,
-      rgba(160, 80, 45, 0.18) 20%,
-      rgba(120, 60, 35, 0.12) 40%,
-      rgba(80, 40, 25, 0.06) 60%,
-      transparent 80%);
+  background: radial-gradient(ellipse 60% 60% at 90% 90%,
+      rgba(200, 100, 50, 0.3) 0%,
+      rgba(150, 75, 40, 0.2) 30%,
+      rgba(100, 50, 30, 0.1) 50%,
+      transparent 70%);
   pointer-events: none;
   z-index: 1;
   animation: fireplaceGlow 4s ease-in-out infinite;
