@@ -313,14 +313,38 @@ body.theme-evening.fireplace-active {
   --bg-gradient-end: #e86b6b;
 }
 
-/* 夜 × 焚き火 の最深状態 - 暖色フィルター付き */
+/* 夜 × 焚き火 の最深状態 */
 body.theme-night.fireplace-active {
   --bg-gradient-start: #5a3030;
   --bg-gradient-mid: #704020;
   --bg-gradient-end: #402030;
 }
 
-/* 焚き火モード時の背景にフィルター効果を追加 */
-body.fireplace-active .background {
-  filter: sepia(20%) saturate(120%) hue-rotate(-10deg);
+/* 焚き火モード時の暖色オーバーレイ（疑似要素で確実に表示） */
+body.fireplace-active .background::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse at 90% 90%,
+      rgba(180, 80, 40, 0.25) 0%,
+      rgba(120, 50, 30, 0.15) 30%,
+      rgba(80, 30, 20, 0.1) 60%,
+      transparent 100%);
+  pointer-events: none;
+  animation: fireplaceGlow 4s ease-in-out infinite;
+}
+
+@keyframes fireplaceGlow {
+
+  0%,
+  100% {
+    opacity: 0.8;
+  }
+
+  50% {
+    opacity: 1;
+  }
 }
