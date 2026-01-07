@@ -313,9 +313,14 @@ body.theme-evening.fireplace-active {
   --bg-gradient-end: #e86b6b;
 }
 
-/* 夜 × 焚き火 の最深状態 - より暖かい色調に */
+/* 夜 × 焚き火 の最深状態 - 暖色フィルター付き */
 body.theme-night.fireplace-active {
-  --bg-gradient-start: #3d2020;
-  --bg-gradient-mid: #4a2a18;
-  --bg-gradient-end: #2a1820;
+  --bg-gradient-start: #5a3030;
+  --bg-gradient-mid: #704020;
+  --bg-gradient-end: #402030;
+}
+
+/* 焚き火モード時の背景にフィルター効果を追加 */
+body.fireplace-active .background {
+  filter: sepia(20%) saturate(120%) hue-rotate(-10deg);
 }
