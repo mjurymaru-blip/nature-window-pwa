@@ -47,7 +47,7 @@ body {
   overflow: hidden;
   font-family: 'Noto Sans JP', sans-serif;
   color: var(--color-text);
-  background: var(--color-night-sky);
+  background: transparent;
 }
 
 #app {
