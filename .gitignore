@@ -47,3 +47,6 @@ repomix-output.txt
 tmp/
 temp/
 *.tmp
+
+# Development docs (not for public)
+docs/
