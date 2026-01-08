@@ -70,17 +70,23 @@ export const SCENE_PRESENCE: Partial<Record<SoundScene, SoundPresence>> = {
     // 他シーンはフェーズ3以降で追加
 };
 
+// ViteのベースURLを使用して音源パスを生成（GitHub Pages対応）
+const soundUrl = (filename: string): string => {
+    const base = import.meta.env.BASE_URL || '/';
+    return `${base}sounds/${filename}`;
+};
+
 // シーン設定
 const SCENE_CONFIGS: Record<SoundScene, SceneConfig | null> = {
     rain: {
         main: {
-            url: '/sounds/rain-loop.mp3',
+            url: soundUrl('rain-loop.mp3'),
             volume: 0.4,
             loop: true
         },
         sub: [
             {
-                url: '/sounds/thunder-distant.mp3',
+                url: soundUrl('thunder-distant.mp3'),
                 volume: 0.2,
                 loop: false,
                 isSubSound: true,
@@ -91,7 +97,7 @@ const SCENE_CONFIGS: Record<SoundScene, SceneConfig | null> = {
     },
     fire: {
         main: {
-            url: '/sounds/fire-crackles.mp3',
+            url: soundUrl('fire-crackles.mp3'),
             volume: 0.5,
             loop: true
         }
@@ -99,13 +105,13 @@ const SCENE_CONFIGS: Record<SoundScene, SceneConfig | null> = {
     },
     wind: {
         main: {
-            url: '/sounds/wind-loop.mp3',
+            url: soundUrl('wind-loop.mp3'),
             volume: 0.3,
             loop: true
         },
         sub: [
             {
-                url: '/sounds/leaves-rustle.mp3',
+                url: soundUrl('leaves-rustle.mp3'),
                 volume: 0.2,
                 loop: false,
                 isSubSound: true,
@@ -116,13 +122,13 @@ const SCENE_CONFIGS: Record<SoundScene, SceneConfig | null> = {
     },
     night: {
         main: {
-            url: '/sounds/insects-loop.mp3',
+            url: soundUrl('insects-loop.mp3'),
             volume: 0.3,
             loop: true
         },
         sub: [
             {
-                url: '/sounds/owl-distant.mp3',
+                url: soundUrl('owl-distant.mp3'),
                 volume: 0.15,
                 loop: false,
                 isSubSound: true,
@@ -133,20 +139,20 @@ const SCENE_CONFIGS: Record<SoundScene, SceneConfig | null> = {
     },
     'night-autumn': {
         main: {
-            url: '/sounds/autumn-insects.mp3',
+            url: soundUrl('autumn-insects.mp3'),
             volume: 0.25,
             loop: true
         }
     },
     'evening-summer': {
         main: {
-            url: '/sounds/higurashi-loop.mp3',
+            url: soundUrl('higurashi-loop.mp3'),
             volume: 0.35,
             loop: true
         },
         sub: [
             {
-                url: '/sounds/crows-evening.mp3',
+                url: soundUrl('crows-evening.mp3'),
                 volume: 0.15,
                 loop: false,
                 isSubSound: true,
@@ -157,35 +163,35 @@ const SCENE_CONFIGS: Record<SoundScene, SceneConfig | null> = {
     },
     morning: {
         main: {
-            url: '/sounds/birds-morning.mp3',
+            url: soundUrl('birds-morning.mp3'),
             volume: 0.35,
             loop: true
         }
     },
     cicada: {
         main: {
-            url: '/sounds/cicada-loop.mp3',
+            url: soundUrl('cicada-loop.mp3'),
             volume: 0.4,
             loop: true
         }
     },
     snow: {
         main: {
-            url: '/sounds/snow-wind.mp3',
+            url: soundUrl('snow-wind.mp3'),
             volume: 0.2,
             loop: true
         }
     },
     wave: {
         main: {
-            url: '/sounds/wave-loop.mp3',
+            url: soundUrl('wave-loop.mp3'),
             volume: 0.4,
             loop: true
         }
     },
     stream: {
         main: {
-            url: '/sounds/stream-loop.mp3',
+            url: soundUrl('stream-loop.mp3'),
             volume: 0.35,
             loop: true
         }
