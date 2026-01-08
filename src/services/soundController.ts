@@ -218,16 +218,31 @@ export class SoundController {
 
     /**
      * AudioContextを初期化（ユーザー操作後に呼び出す必要あり）
+     * iOS Safari対応: webkitAudioContextフォールバック
      */
     async init(): Promise<void> {
-        if (this.audioContext) return;
+        if (this.audioContext) {
+            // 既存のコンテキストがsuspendedならresumeを試行
+            if (this.audioContext.state === 'suspended') {
+                await this.audioContext.resume();
+            }
+            return;
+        }
 
-        this.audioContext = new AudioContext();
+        // iOS Safari対応: webkitAudioContextを使用
+        const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        this.audioContext = new AudioContextClass();
+
+        // モバイルブラウザ対応: 即座にresumeを試行
+        if (this.audioContext.state === 'suspended') {
+            await this.audioContext.resume();
+        }
+
         this.gainNode = this.audioContext.createGain();
         this.gainNode.connect(this.audioContext.destination);
         this.gainNode.gain.value = this.masterVolume;
 
-        console.log('SoundController: AudioContext initialized');
+        console.log('SoundController: AudioContext initialized, state:', this.audioContext.state);
     }
 
     /**
