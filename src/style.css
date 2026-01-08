@@ -93,6 +93,9 @@ body {
   transform: translateX(-50%);
   text-align: center;
   opacity: 0.9;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
 }
 
 .season-name {
