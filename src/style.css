@@ -293,7 +293,7 @@ body {
   box-shadow: 0 0 15px rgba(255, 100, 50, 0.4);
 }
 
-/* 焚き火モード時の暖色オーバーレイ（右下から上方向に光が広がる） */
+/* 焚き火モード時の暖色オーバーレイ（上方向のみに光が広がる） */
 body.fireplace-active .background::after {
   content: '';
   position: fixed;
@@ -301,12 +301,12 @@ body.fireplace-active .background::after {
   left: 0;
   width: 100%;
   height: 100%;
-  /* 右下から左上に向かって光が広がる */
-  background: linear-gradient(to top left,
+  /* 焚き火ボタンの下（画面外）を中心に楕円の上半分だけ表示 */
+  background: radial-gradient(ellipse 60% 50% at 90% 120%,
       rgba(220, 110, 50, 0.4) 0%,
-      rgba(180, 90, 45, 0.25) 15%,
-      rgba(120, 60, 35, 0.1) 35%,
-      transparent 60%);
+      rgba(180, 90, 45, 0.25) 30%,
+      rgba(120, 60, 35, 0.1) 55%,
+      transparent 75%);
   pointer-events: none;
   z-index: 1;
   animation: fireplaceGlow 4s ease-in-out infinite;
