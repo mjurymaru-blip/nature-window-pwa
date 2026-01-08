@@ -215,10 +215,10 @@ export class SoundController {
     private fireplaceSource: AudioBufferSourceNode | null = null;
     private fireplaceBuffer: AudioBuffer | null = null;
     private isFireplaceActive: boolean = false;
-
     /**
      * AudioContextを初期化（ユーザー操作後に呼び出す必要あり）
      * iOS Safari対応: webkitAudioContextフォールバック
+     * Android Chrome対応: 無音再生によるオーディオアンロック
      */
     async init(): Promise<void> {
         if (this.audioContext) {
@@ -236,6 +236,18 @@ export class SoundController {
         // モバイルブラウザ対応: 即座にresumeを試行
         if (this.audioContext.state === 'suspended') {
             await this.audioContext.resume();
+        }
+
+        // Android Chrome対応: 無音バッファを再生してオーディオをアンロック
+        try {
+            const silentBuffer = this.audioContext.createBuffer(1, 1, 22050);
+            const source = this.audioContext.createBufferSource();
+            source.buffer = silentBuffer;
+            source.connect(this.audioContext.destination);
+            source.start(0);
+            console.log('SoundController: Silent buffer played for audio unlock');
+        } catch (e) {
+            console.warn('SoundController: Failed to play silent buffer', e);
         }
 
         this.gainNode = this.audioContext.createGain();
