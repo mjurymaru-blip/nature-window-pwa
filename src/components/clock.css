@@ -1,0 +1,265 @@
+/* Clock Display - 時計コンポーネント専用スタイル */
+
+/* CSS変数（テーマ連動） */
+.clock-panel {
+    --clock-color: rgba(255, 255, 255, 0.9);
+    --clock-color-muted: rgba(255, 255, 255, 0.5);
+    --clock-shadow: rgba(255, 255, 255, 0.1);
+    --clock-fill-color: hsla(220, 80%, 70%, 0.35);
+    --clock-fill-color-end: hsla(220, 80%, 70%, 0.05);
+}
+
+/* 焚き火モード時の照り返し */
+body.fireplace-active .clock-panel,
+.clock-panel.fireplace-glow {
+    --clock-color: hsl(25, 80%, 85%);
+    --clock-shadow: rgba(255, 120, 50, 0.3);
+    --clock-fill-color: hsla(25, 80%, 60%, 0.4);
+    --clock-fill-color-end: hsla(25, 80%, 60%, 0.08);
+}
+
+/* 時間帯別の色調整 */
+.theme-morning .clock-panel {
+    --clock-color: rgba(45, 52, 54, 0.9);
+    --clock-shadow: rgba(255, 154, 158, 0.2);
+}
+
+.theme-day .clock-panel {
+    --clock-color: rgba(45, 52, 54, 0.85);
+    --clock-shadow: rgba(161, 196, 253, 0.2);
+}
+
+.theme-evening .clock-panel {
+    --clock-color: rgba(255, 255, 255, 0.9);
+    --clock-shadow: rgba(250, 112, 154, 0.2);
+}
+
+.theme-night .clock-panel {
+    --clock-color: rgba(255, 255, 255, 0.85);
+    --clock-shadow: rgba(15, 52, 96, 0.3);
+}
+
+/* ===== 天候連動（時計が天気に染まる） ===== */
+
+/* 雨の日: 深い青み */
+body.weather-rainy .clock-panel {
+    --clock-color: hsl(210, 60%, 75%);
+    --clock-shadow: rgba(100, 150, 200, 0.3);
+    --clock-fill-color: hsla(210, 70%, 60%, 0.4);
+    --clock-fill-color-end: hsla(210, 70%, 60%, 0.08);
+}
+
+/* 雪の日: 白くぼやけた質感 */
+body.weather-snowy .clock-panel {
+    --clock-color: rgba(255, 255, 255, 0.95);
+    --clock-shadow: rgba(220, 230, 240, 0.5);
+    --clock-fill-color: hsla(200, 30%, 90%, 0.5);
+    --clock-fill-color-end: hsla(200, 30%, 90%, 0.1);
+}
+
+/* 嵐の日: 暗い紫がかった色 */
+body.weather-stormy .clock-panel {
+    --clock-color: hsl(270, 40%, 75%);
+    --clock-shadow: rgba(100, 80, 150, 0.4);
+    --clock-fill-color: hsla(270, 50%, 50%, 0.4);
+    --clock-fill-color-end: hsla(270, 50%, 50%, 0.08);
+}
+
+/* 曇りの日: 少しくすんだ色 */
+body.weather-cloudy .clock-panel {
+    --clock-color: rgba(200, 210, 220, 0.85);
+    --clock-shadow: rgba(150, 160, 170, 0.25);
+}
+
+/* パネル全体 */
+.clock-panel {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* ミニマルモード */
+.clock-minimal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+.clock-minimal .clock-time {
+    font-size: clamp(4rem, 15vw, 10rem);
+    font-weight: 200;
+    letter-spacing: 0.05em;
+    color: var(--clock-color);
+    text-shadow: 0 0 40px var(--clock-shadow);
+    animation: clockBreathe 5s ease-in-out infinite;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* 砂時計モード */
+.clock-hourglass {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 砂時計の「満ちる光」 */
+.clock-fill {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 0%;
+    background: linear-gradient(to top,
+            var(--clock-fill-color),
+            var(--clock-fill-color-end));
+    filter: blur(12px);
+    transition: height 1s linear, background 2s ease;
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* 80%以上で色相を変える */
+.clock-fill.approaching {
+    --clock-fill-color: hsla(200, 100%, 75%, 0.45);
+    --clock-fill-color-end: hsla(200, 100%, 75%, 0.05);
+}
+
+/* 最後の1分で「気配」演出 */
+.clock-fill.final-flare {
+    --clock-fill-color: hsla(180, 100%, 85%, 0.6);
+    --clock-fill-color-end: hsla(180, 100%, 85%, 0.1);
+    filter: blur(16px) brightness(1.2);
+}
+
+/* 焚き火モード時の砂時計 */
+body.fireplace-active .clock-fill,
+.clock-panel.fireplace-glow .clock-fill {
+    --clock-fill-color: hsla(25, 90%, 55%, 0.5);
+    --clock-fill-color-end: hsla(25, 90%, 55%, 0.1);
+}
+
+body.fireplace-active .clock-fill.approaching,
+.clock-panel.fireplace-glow .clock-fill.approaching {
+    --clock-fill-color: hsla(35, 100%, 65%, 0.55);
+    --clock-fill-color-end: hsla(35, 100%, 65%, 0.1);
+}
+
+body.fireplace-active .clock-fill.final-flare,
+.clock-panel.fireplace-glow .clock-fill.final-flare {
+    --clock-fill-color: hsla(40, 100%, 75%, 0.65);
+    --clock-fill-color-end: hsla(40, 100%, 75%, 0.15);
+}
+
+/* 砂時計モードの時刻表示 */
+.clock-hourglass .clock-time {
+    position: relative;
+    z-index: 2;
+    font-size: clamp(3rem, 12vw, 8rem);
+    font-weight: 200;
+    letter-spacing: 0.05em;
+    color: var(--clock-color);
+    text-shadow: 0 0 30px var(--clock-shadow);
+    animation: clockBreathe 5s ease-in-out infinite;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* ブレスアニメーション（生命感） */
+@keyframes clockBreathe {
+
+    0%,
+    100% {
+        opacity: 0.85;
+        filter: brightness(1);
+    }
+
+    50% {
+        opacity: 1;
+        filter: brightness(1.15);
+    }
+}
+
+/* 深夜モード（0:00-5:00）はより静かに */
+.night-mode .clock-time {
+    animation: clockBreatheNight 8s ease-in-out infinite;
+}
+
+@keyframes clockBreatheNight {
+
+    0%,
+    100% {
+        opacity: 0.8;
+        filter: brightness(0.9);
+    }
+
+    50% {
+        opacity: 0.9;
+        filter: brightness(1);
+    }
+}
+
+/* モード切替ボタン */
+.clock-mode-toggle {
+    position: absolute;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+    cursor: pointer;
+    opacity: 0.4;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.clock-mode-toggle:hover {
+    opacity: 0.9;
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateX(-50%) scale(1.1);
+}
+
+.clock-mode-toggle:active {
+    transform: translateX(-50%) scale(0.95);
+}
+
+/* 横画面時 */
+@media (orientation: landscape) {
+    .clock-mode-toggle {
+        bottom: auto;
+        top: 1rem;
+        left: 1rem;
+        transform: none;
+    }
+
+    .clock-mode-toggle:hover {
+        transform: scale(1.1);
+    }
+
+    .clock-mode-toggle:active {
+        transform: scale(0.95);
+    }
+}
+
+/* 明るいテーマ用のモードボタン */
+.theme-morning .clock-mode-toggle,
+.theme-day .clock-mode-toggle {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.1);
+}

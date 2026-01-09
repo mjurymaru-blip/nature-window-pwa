@@ -10,6 +10,7 @@ import { getCurrentSekki, getCurrentKou } from './services/seasonCalendar';
 import type { Sekki, Kou } from './services/seasonCalendar';
 import { soundController, SoundController } from './services/soundController';
 import type { SoundScene } from './services/soundController';
+import { ClockDisplay } from './components/ClockDisplay';
 
 // 状態管理
 interface AppState {
@@ -20,17 +21,30 @@ interface AppState {
   soundScene: SoundScene;
   isSoundPlaying: boolean;
   isFireplaceActive: boolean;  // 焚き火オーバーレイ
+  isClockVisible: boolean;     // 時計表示 ON/OFF
   isLoading: boolean;
   error: string | null;
 }
 
 // localStorageから焚き火状態を復元
 const FIREPLACE_STORAGE_KEY = 'nature-window-fireplace';
+const CLOCK_VISIBLE_STORAGE_KEY = 'nature-window-clock-visible';
+
 function loadFireplaceState(): boolean {
   try {
     return localStorage.getItem(FIREPLACE_STORAGE_KEY) === 'true';
   } catch {
     return false;
+  }
+}
+
+function loadClockVisibleState(): boolean {
+  try {
+    const saved = localStorage.getItem(CLOCK_VISIBLE_STORAGE_KEY);
+    // デフォルトはtrue（時計表示）
+    return saved === null ? true : saved === 'true';
+  } catch {
+    return true;
   }
 }
 
@@ -42,9 +56,13 @@ const state: AppState = {
   soundScene: 'silent',
   isSoundPlaying: false,
   isFireplaceActive: loadFireplaceState(),
+  isClockVisible: loadClockVisibleState(),
   isLoading: true,
   error: null
 };
+
+// Clockコンポーネントのインスタンス
+let clockDisplay: ClockDisplay | null = null;
 
 /**
  * UIを描画
@@ -75,57 +93,93 @@ function render(): void {
 
   const condition = state.weather ? getWeatherCondition(state.weather.weatherCode) : null;
   const soundIcon = state.isSoundPlaying ? '🔊' : '🔇';
+  const clockIcon = state.isClockVisible ? '🕐' : '🕐';
+  const layoutClass = state.isClockVisible ? 'split-layout' : 'split-layout clock-hidden';
 
   app.innerHTML = `
     <div class="background"></div>
     
-    <!-- 天気表示 -->
-    ${state.weather ? `
-      <div class="weather-display">
-        <div class="weather-temp">${Math.round(state.weather.temperature)}°</div>
-        <div class="weather-condition">${condition?.description || ''}</div>
+    <!-- 2カラムレイアウト: 左Clock / 右Nature -->
+    <div class="${layoutClass}">
+      <!-- 左: 時計パネル -->
+      <div class="clock-container" id="clockContainer"></div>
+      
+      <!-- 右: Nature パネル -->
+      <div class="nature-container">
+        <!-- 天気表示 -->
+        ${state.weather ? `
+          <div class="weather-display">
+            <div class="weather-temp">${Math.round(state.weather.temperature)}°</div>
+            <div class="weather-condition">${condition?.description || ''}</div>
+          </div>
+        ` : ''}
+        
+        <!-- 季節表示（タップで詳細） -->
+        <div class="season-display">
+          <div class="season-name">${state.kou.name}</div>
+          <div class="season-detail">
+            <div class="kou-reading">${state.kou.reading}</div>
+            <div class="kou-description">${state.kou.description}</div>
+            <div class="sekki-name">${state.sekki.name}（${state.sekki.reading}）</div>
+          </div>
+        </div>
+        
+        <!-- 音声コントロール -->
+        <div class="sound-control">
+          <button 
+            class="clock-toggle ${state.isClockVisible ? 'active' : ''}" 
+            aria-label="時計表示切替" 
+            data-action="toggle-clock"
+          >
+            ${clockIcon}
+          </button>
+          <button 
+            class="fireplace-toggle ${state.isFireplaceActive ? 'active' : ''}" 
+            aria-label="焚き火モード" 
+            data-action="toggle-fireplace"
+          >
+            🔥
+          </button>
+          <button class="sound-toggle" aria-label="音声切り替え" data-action="toggle-sound">
+            ${soundIcon}
+          </button>
+          <label for="sound-scene-select" class="visually-hidden">音声シーン選択</label>
+          <select id="sound-scene-select" class="sound-scene-select" data-action="change-scene">
+            ${SoundController.getAvailableScenes().map(scene => `
+              <option value="${scene}" ${scene === state.soundScene ? 'selected' : ''}>
+                ${getSoundSceneLabel(scene)}
+              </option>
+            `).join('')}
+          </select>
+        </div>
       </div>
-    ` : ''}
-    
-    <!-- 季節表示（タップで詳細） -->
-    <div class="season-display">
-      <div class="season-name">${state.kou.name}</div>
-      <div class="season-detail">
-        <div class="kou-reading">${state.kou.reading}</div>
-        <div class="kou-description">${state.kou.description}</div>
-        <div class="sekki-name">${state.sekki.name}（${state.sekki.reading}）</div>
-      </div>
-    </div>
-    
-    <!-- 音声コントロール -->
-    <div class="sound-control">
-      <button 
-        class="fireplace-toggle ${state.isFireplaceActive ? 'active' : ''}" 
-        aria-label="焚き火モード" 
-        data-action="toggle-fireplace"
-      >
-        🔥
-      </button>
-      <button class="sound-toggle" aria-label="音声切り替え" data-action="toggle-sound">
-        ${soundIcon}
-      </button>
-      <label for="sound-scene-select" class="visually-hidden">音声シーン選択</label>
-      <select id="sound-scene-select" class="sound-scene-select" data-action="change-scene">
-        ${SoundController.getAvailableScenes().map(scene => `
-          <option value="${scene}" ${scene === state.soundScene ? 'selected' : ''}>
-            ${getSoundSceneLabel(scene)}
-          </option>
-        `).join('')}
-      </select>
     </div>
   `;
 
-  // テーマクラスを適用（焚き火モード対応）
+  // テーマクラスを適用（焚き火モード・天候モード対応）
   let bodyClass = `theme-${state.theme}`;
   if (state.isFireplaceActive) {
     bodyClass += ' fireplace-active';
   }
+  // 天候テーマを追加（Clock側の色に反映）
+  if (state.weather) {
+    const condition = getWeatherCondition(state.weather.weatherCode);
+    bodyClass += ` weather-${condition.theme}`;
+  }
   document.body.className = bodyClass;
+
+  // Clockコンポーネントを初期化
+  const clockContainer = document.getElementById('clockContainer');
+  if (clockContainer) {
+    if (clockDisplay) {
+      clockDisplay.stop();
+    }
+    clockDisplay = new ClockDisplay({
+      container: clockContainer,
+      isFireplaceActive: state.isFireplaceActive
+    });
+    clockDisplay.start();
+  }
 
   // イベントリスナーを設定
   setupEventListeners();
@@ -172,6 +226,12 @@ function setupEventListeners(): void {
   const fireplaceToggle = document.querySelector('[data-action="toggle-fireplace"]');
   if (fireplaceToggle) {
     fireplaceToggle.addEventListener('click', handleFireplaceToggle);
+  }
+
+  // 時計表示トグルボタン
+  const clockToggle = document.querySelector('[data-action="toggle-clock"]');
+  if (clockToggle) {
+    clockToggle.addEventListener('click', handleClockToggle);
   }
 }
 
@@ -239,6 +299,19 @@ async function handleFireplaceToggle(): Promise<void> {
   } catch (e) {
     console.error('焚き火の切り替えに失敗:', e);
   }
+}
+
+/**
+ * 時計表示トグルハンドラ
+ */
+function handleClockToggle(): void {
+  state.isClockVisible = !state.isClockVisible;
+
+  // localStorageに保存
+  localStorage.setItem(CLOCK_VISIBLE_STORAGE_KEY, state.isClockVisible.toString());
+
+  render();
+  console.log(`時計表示: ${state.isClockVisible ? 'ON 🕐' : 'OFF'}`);
 }
 
 /**

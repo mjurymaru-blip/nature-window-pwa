@@ -53,11 +53,60 @@ body {
 #app {
   width: 100%;
   height: 100%;
+  position: relative;
+}
+
+/* ===== 2カラムレイアウト（左Clock / 右Nature） ===== */
+.split-layout {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: 40% 60%;
+  position: relative;
+  z-index: 1;
+}
+
+/* 時計非表示時は1カラム */
+.split-layout.clock-hidden {
+  grid-template-columns: 1fr;
+}
+
+.split-layout.clock-hidden .clock-container {
+  display: none;
+}
+
+/* 縦向き時は上下分割 */
+@media (orientation: portrait) {
+  .split-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: 30% 70%;
+  }
+
+  .split-layout.clock-hidden {
+    grid-template-rows: 1fr;
+  }
+}
+
+/* 時計パネル（左） - 境界線なし、自然なつながり */
+.clock-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  /* 境界はグラデーションで自然につなげるため、線は不要 */
+}
+
+/* Natureパネル（右） */
+.nature-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  position: relative;
 }
 
 /* 背景グラデーション（焼き付き防止：1時間で回転） */
@@ -151,6 +200,37 @@ body {
 
 .sound-control:hover {
   opacity: 1;
+}
+
+/* 時計表示トグルボタン */
+.clock-toggle {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clock-toggle:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.clock-toggle:active {
+  transform: scale(0.95);
+}
+
+/* 時計表示中のグロー効果 */
+.clock-toggle.active {
+  background: rgba(100, 150, 255, 0.2);
+  border-color: rgba(100, 150, 255, 0.4);
+  box-shadow: 0 0 10px rgba(100, 150, 255, 0.3);
 }
 
 .sound-toggle {
