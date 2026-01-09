@@ -366,9 +366,42 @@ async function init(): Promise<void> {
   // Page Visibility API: バックグラウンド/フォアグラウンド切り替え検知
   document.addEventListener('visibilitychange', handleVisibilityChange);
 
+  // Screen Wake Lock: スリープ防止
+  requestWakeLock();
+
   console.log('Nature Window PWA 起動完了');
   console.log(`サウンドシーン: ${state.soundScene} (音声ボタンをクリックで再生開始)`);
 }
 
+// === Screen Wake Lock API: デバイスのスリープを防止 ===
+let wakeLock: WakeLockSentinel | null = null;
+
+async function requestWakeLock(): Promise<void> {
+  if (!('wakeLock' in navigator)) {
+    console.log('Wake Lock API は非対応です');
+    return;
+  }
+
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+    console.log('Wake Lock: スリープ防止を有効化しました');
+
+    // Wake Lockが解放された時（ページ非表示など）の処理
+    wakeLock.addEventListener('release', () => {
+      console.log('Wake Lock: 解放されました');
+    });
+  } catch (err) {
+    console.warn('Wake Lock: 取得に失敗しました', err);
+  }
+}
+
+// ページが再表示された時にWake Lockを再取得
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'visible' && wakeLock === null) {
+    await requestWakeLock();
+  }
+});
+
 // アプリ起動
 init();
+
