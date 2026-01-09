@@ -5,8 +5,9 @@
     --clock-color: rgba(255, 255, 255, 0.9);
     --clock-color-muted: rgba(255, 255, 255, 0.5);
     --clock-shadow: rgba(255, 255, 255, 0.1);
-    --clock-fill-color: hsla(220, 80%, 70%, 0.35);
-    --clock-fill-color-end: hsla(220, 80%, 70%, 0.05);
+    /* 砂時計の光はデフォルトでほぼ透明（背景に溶け込む） */
+    --clock-fill-color: hsla(220, 40%, 60%, 0.03);
+    --clock-fill-color-end: hsla(220, 40%, 60%, 0.005);
 }
 
 /* 焚き火モード時の照り返し */
