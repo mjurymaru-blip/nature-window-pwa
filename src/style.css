@@ -305,7 +305,7 @@ body.fireplace-active .background::after {
   z-index: 1;
   animation: fireplaceGlow 4s ease-in-out infinite;
   /* デフォルト（縦向き）：焚き火ボタン付近から光が広がる */
-  background: radial-gradient(circle at 85% 80%,
+  background: radial-gradient(circle at 85% 78%,
       rgba(220, 110, 50, 0.35) 0%,
       rgba(180, 90, 45, 0.2) 20%,
       rgba(120, 60, 35, 0.08) 40%,
@@ -315,7 +315,7 @@ body.fireplace-active .background::after {
 /* 横向き（landscape）: ボタンが右端中央寄りになるので調整 */
 @media (orientation: landscape) {
   body.fireplace-active .background::after {
-    background: radial-gradient(circle at 88% 65%,
+    background: radial-gradient(circle at 91% 60%,
         rgba(220, 110, 50, 0.35) 0%,
         rgba(180, 90, 45, 0.2) 15%,
         rgba(120, 60, 35, 0.08) 35%,
