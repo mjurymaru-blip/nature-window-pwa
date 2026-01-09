@@ -10,13 +10,14 @@
     --clock-fill-color-end: hsla(220, 40%, 60%, 0.005);
 }
 
-/* 焚き火モード時の照り返し */
+/* 焚き火モード時の照り返し（時計テキストの色のみ変更、砂時計の光は控えめに） */
 body.fireplace-active .clock-panel,
 .clock-panel.fireplace-glow {
-    --clock-color: hsl(25, 80%, 85%);
-    --clock-shadow: rgba(255, 120, 50, 0.3);
-    --clock-fill-color: hsla(25, 80%, 60%, 0.4);
-    --clock-fill-color-end: hsla(25, 80%, 60%, 0.08);
+    --clock-color: hsl(25, 70%, 80%);
+    --clock-shadow: rgba(255, 120, 50, 0.2);
+    /* 砂時計の光はほぼ透明に（背景のグラデーションで暖色を表現） */
+    --clock-fill-color: hsla(25, 50%, 60%, 0.02);
+    --clock-fill-color-end: hsla(25, 50%, 60%, 0.005);
 }
 
 /* 時間帯別の色調整 */
@@ -143,23 +144,23 @@ body.weather-cloudy .clock-panel {
     filter: blur(16px) brightness(1.2);
 }
 
-/* 焚き火モード時の砂時計 */
+/* 焚き火モード時の砂時計 - 光を完全に透明化（背景グラデーションで暖色を表現） */
 body.fireplace-active .clock-fill,
 .clock-panel.fireplace-glow .clock-fill {
-    --clock-fill-color: hsla(25, 90%, 55%, 0.5);
-    --clock-fill-color-end: hsla(25, 90%, 55%, 0.1);
+    --clock-fill-color: transparent;
+    --clock-fill-color-end: transparent;
 }
 
 body.fireplace-active .clock-fill.approaching,
 .clock-panel.fireplace-glow .clock-fill.approaching {
-    --clock-fill-color: hsla(35, 100%, 65%, 0.55);
-    --clock-fill-color-end: hsla(35, 100%, 65%, 0.1);
+    --clock-fill-color: transparent;
+    --clock-fill-color-end: transparent;
 }
 
 body.fireplace-active .clock-fill.final-flare,
 .clock-panel.fireplace-glow .clock-fill.final-flare {
-    --clock-fill-color: hsla(40, 100%, 75%, 0.65);
-    --clock-fill-color-end: hsla(40, 100%, 75%, 0.15);
+    --clock-fill-color: transparent;
+    --clock-fill-color-end: transparent;
 }
 
 /* 砂時計モードの時刻表示 */

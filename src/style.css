@@ -384,22 +384,24 @@ body.fireplace-active .background::after {
   pointer-events: none;
   z-index: 1;
   animation: fireplaceGlow 4s ease-in-out infinite;
-  /* デフォルト（縦向き）：焚き火ボタン付近から光が広がる */
-  background: radial-gradient(circle at 85% 78%,
-      rgba(220, 110, 50, 0.35) 0%,
-      rgba(180, 90, 45, 0.2) 20%,
-      rgba(120, 60, 35, 0.08) 40%,
-      transparent 60%);
+  /* 中央下部から画面全体に広がる（左右パネル両方に暖色が届く） */
+  background: radial-gradient(ellipse 120% 100% at 60% 90%,
+      rgba(220, 110, 50, 0.3) 0%,
+      rgba(180, 90, 45, 0.18) 25%,
+      rgba(140, 70, 40, 0.1) 45%,
+      rgba(100, 50, 30, 0.04) 65%,
+      transparent 85%);
 }
 
-/* 横向き（landscape）: ボタンが右端中央寄りになるので調整 */
+/* 横向き（landscape）: 中央やや右から広がる */
 @media (orientation: landscape) {
   body.fireplace-active .background::after {
-    background: radial-gradient(circle at 91% 60%,
-        rgba(220, 110, 50, 0.35) 0%,
-        rgba(180, 90, 45, 0.2) 15%,
-        rgba(120, 60, 35, 0.08) 35%,
-        transparent 55%);
+    background: radial-gradient(ellipse 150% 120% at 55% 95%,
+        rgba(220, 110, 50, 0.28) 0%,
+        rgba(180, 90, 45, 0.15) 20%,
+        rgba(140, 70, 40, 0.08) 40%,
+        rgba(100, 50, 30, 0.03) 60%,
+        transparent 80%);
   }
 }
 
@@ -407,7 +409,7 @@ body.fireplace-active .background::after {
 
   0%,
   100% {
-    opacity: 0.8;
+    opacity: 0.85;
   }
 
   50% {
