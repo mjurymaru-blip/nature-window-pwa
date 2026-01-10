@@ -433,6 +433,11 @@ function handleVisibilityChange(): void {
     updateTheme();
     render();
     startIntervals();
+
+    // Wake Lock再取得（スリープ防止）
+    if (wakeLock === null) {
+      requestWakeLock();
+    }
   }
 }
 
@@ -483,18 +488,12 @@ async function requestWakeLock(): Promise<void> {
     // Wake Lockが解放された時（ページ非表示など）の処理
     wakeLock.addEventListener('release', () => {
       console.log('Wake Lock: 解放されました');
+      wakeLock = null; // 解放されたら変数をクリアして再取得可能にする
     });
   } catch (err) {
     console.warn('Wake Lock: 取得に失敗しました', err);
   }
 }
-
-// ページが再表示された時にWake Lockを再取得
-document.addEventListener('visibilitychange', async () => {
-  if (document.visibilityState === 'visible' && wakeLock === null) {
-    await requestWakeLock();
-  }
-});
 
 // アプリ起動
 init();
