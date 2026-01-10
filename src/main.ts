@@ -303,6 +303,7 @@ async function handleFireplaceToggle(): Promise<void> {
 
 /**
  * 時計表示トグルハンドラ
+ * フェードアウトを効かせるため、render()ではなくクラスを直接切り替え
  */
 function handleClockToggle(): void {
   state.isClockVisible = !state.isClockVisible;
@@ -310,7 +311,27 @@ function handleClockToggle(): void {
   // localStorageに保存
   localStorage.setItem(CLOCK_VISIBLE_STORAGE_KEY, state.isClockVisible.toString());
 
-  render();
+  // クラスを直接切り替え（render()だとDOMが再生成されてトランジションが効かない）
+  const splitLayout = document.querySelector('.split-layout');
+  const clockToggleBtn = document.querySelector('.clock-toggle');
+
+  if (splitLayout) {
+    if (state.isClockVisible) {
+      splitLayout.classList.remove('clock-hidden');
+    } else {
+      splitLayout.classList.add('clock-hidden');
+    }
+  }
+
+  // ボタンのactiveクラスも更新
+  if (clockToggleBtn) {
+    if (state.isClockVisible) {
+      clockToggleBtn.classList.add('active');
+    } else {
+      clockToggleBtn.classList.remove('active');
+    }
+  }
+
   console.log(`時計表示: ${state.isClockVisible ? 'ON 🕐' : 'OFF'}`);
 }
 

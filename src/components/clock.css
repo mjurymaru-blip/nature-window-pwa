@@ -95,7 +95,7 @@ body.weather-cloudy .clock-panel {
 }
 
 .clock-minimal .clock-time {
-    font-size: clamp(4rem, 15vw, 10rem);
+    font-size: clamp(3rem, 12vw, 7rem);
     font-weight: 200;
     letter-spacing: 0.05em;
     color: var(--clock-color);

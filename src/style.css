@@ -66,13 +66,11 @@ body {
   z-index: 1;
 }
 
-/* 時計非表示時は1カラム */
-.split-layout.clock-hidden {
-  grid-template-columns: 1fr;
-}
-
+/* 時計非表示時 - opacityだけでフェードアウト（位置を維持） */
 .split-layout.clock-hidden .clock-container {
-  display: none;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 /* 縦向き時は上下分割 */
@@ -80,10 +78,6 @@ body {
   .split-layout {
     grid-template-columns: 1fr;
     grid-template-rows: 30% 70%;
-  }
-
-  .split-layout.clock-hidden {
-    grid-template-rows: 1fr;
   }
 }
 
@@ -95,7 +89,8 @@ body {
   justify-content: center;
   align-items: center;
   position: relative;
-  /* 境界はグラデーションで自然につなげるため、線は不要 */
+  /* フェードアウト用トランジション（4秒かけて闇に溶ける） */
+  transition: opacity 4s ease-out, visibility 4s;
 }
 
 /* Natureパネル（右） */
