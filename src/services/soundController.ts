@@ -405,6 +405,9 @@ export class SoundController {
         }
         this.subTimers = [];
 
+        // 焚き火オーバーレイも停止（音量OFFで焚き火音も止める）
+        this.disableFireplaceOverlay();
+
         console.log('SoundController: Stopped');
     }
 
